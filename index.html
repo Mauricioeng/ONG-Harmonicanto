@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harmonicanto | Junte-se a Nós</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- CONFIGURAÇÕES GLOBAIS E PALETA DE CORES --- */
+    :root {
+      --primary-color: #0A2239;
+      --gradient-start: #0A2239;
+      --gradient-end: #1C3F5E;
+      --background-color: #eef3f7;
+      --card-background-color: #ffffff;
+      --text-color: #333333;
+      --muted-text-color: #6a7c8e;
+      --input-background-color: #f7f9fb;
+      --progress-background: #dce4eb;
+      --border-color: #cfd8e3;
+      --success-color: #27ae60;
+      --danger-color: #e74c3c;
+    }
+
+    /* --- ESTILO BASE DO CORPO --- */
+    body {
+      background-color: var(--background-color);
+      padding: 2rem 1rem;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 110vh;
+    }
+    
+    /* [MODIFICADO] Estilo para desfocar o fundo quando o chat está aberto */
+    body.chat-is-open #main-content {
+        filter: blur(5px) brightness(0.8);
+        transform: scale(1.02); /* Efeito de zoom sutil no fundo */
+        pointer-events: none; /* Impede cliques no formulário */
+        user-select: none; /* Impede seleção de texto no formulário */
+    }
+
+    /* --- ESTILOS DO FORMULÁRIO (Simplificado) --- */
+    #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--background-color); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 998; transition: opacity 0.6s ease-out, visibility 0.6s; }
+    #splash-screen.hidden { opacity: 0; visibility: hidden; }
+    .splash-logo-img { width: 180px; height: auto; animation: pulse 3s ease-in-out infinite; }
+    .splash-title { font-size: 2.2rem; font-weight: 700; color: var(--text-color); margin-top: 1.5rem; opacity: 0; animation: fadeIn 0.8s ease-in forwards; animation-delay: 1.8s; }
+    .splash-subtitle { font-size: 1.1rem; color: var(--muted-text-color); margin-top: 0.5rem; opacity: 0; height: 2em; animation: fadeIn 0.8s ease-in forwards; animation-delay: 2.2s; }
+    
+    /* [MODIFICADO] Transição do #main-content agora inclui filter e transform */
+    #main-content {
+      opacity: 0;
+      transition: opacity 0.6s ease-in, filter 0.4s ease-out, transform 0.4s ease-out;
+    }
+    
+    #main-content.visible { opacity: 1; }
+    .container { max-width: 600px; perspective: 1200px; margin-bottom: 5rem; }
+    .card-container { position: relative; min-height: 650px; }
+    .card-flipper { transition: transform 0.8s; transform-style: preserve-3d; }
+    .card-flipper.is-flipped { transform: rotateY(180deg); }
+    .card { border: none; border-radius: 1.25rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); background-color: var(--card-background-color); position: absolute; width: 100%; backface-visibility: hidden; overflow: hidden; }
+    .card-back { transform: rotateY(180deg); }
+    .card-title { font-size: 2rem; font-weight: 700; color: var(--text-color); }
+    .greeting { color: var(--muted-text-color); font-size: 1.1rem; min-height: 1.5em; }
+    .logo-container { height: 60px; margin-bottom: 1rem; } 
+    .logo-img { width: 90px; height: 150px; animation-delay: 2s; }
+    .progress-container { margin-bottom: 2rem; }
+    .progress { height: 8px; border-radius: 4px; background-color: var(--progress-background); overflow: hidden; }
+    .progress-bar { background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end)); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-bar-label { color: var(--muted-text-color); font-size: 0.85rem; font-weight: 500; text-align: center; margin-top: 0.5rem; }
+    .form-step { display: none; }
+    .form-step.active { display: block; }
+    .form-step.active > * { opacity: 0; animation: slideUpFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    .form-step.active > *:nth-child(1) { animation-delay: 0.1s; }
+    .is-invalid-shake { animation: shake 0.5s; border-color: var(--danger-color) !important; }
+    .form-label { transition: color 0.3s ease, font-weight 0.3s ease; }
+    .form-control, .form-select { font-size: 1rem; border-radius: 0.75rem; padding: 0.85rem 1rem; background-color: var(--input-background-color); border: 1px solid var(--border-color); color: var(--text-color); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-control:focus, .form-select:focus { border-color: var(--gradient-end); box-shadow: 0 0 0 0.25rem rgba(28, 63, 94, 0.2); background-color: var(--card-background-color); }
+    .mb-3:has(.form-control:focus) > .form-label,
+    .mb-3:has(.form-select:focus) > .form-label { color: var(--primary-color); font-weight: 500; }
+    .btn-primary { background-image: linear-gradient(45deg, var(--gradient-start) 0%, var(--gradient-end) 100%); border: none; border-radius: 0.75rem; padding: 0.85rem 1.5rem; font-weight: 500; color: white; box-shadow: 0 4px 15px rgba(10, 34, 57, 0.15); background-size: 200% auto; transition: all 0.4s ease-in-out; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 7px 20px rgba(10, 34, 57, 0.25); background-position: right center; }
+    .conditional-options { display: none; animation: slideUpFadeIn 0.4s; }
+    .form-check-input:checked { background-color: var(--primary-color); border-color: var(--primary-color); }
+    .form-check-label { transition: color 0.3s ease, transform 0.3s ease; }
+    .form-check-input:checked + .form-check-label { color: var(--primary-color); font-weight: 500; transform: translateX(3px); }
+    #success-message .icon-success { font-size: 4rem; color: var(--success-color); margin-bottom: 1rem; font-weight: bold; line-height: 1; }
+    #success-message h4 { font-size: 1.75rem; color: var(--text-color); font-weight: 700; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUpFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(0.95); } }
+
+    /* --- INÍCIO: ESTILOS DO CHATBOT --- */
+    #chat-toggle-button { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background-color: var(--primary-color); border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); z-index: 1001; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+    #chat-toggle-button svg { width: 30px; height: 30px; stroke: white; transition: all 0.3s ease; }
+    #chat-toggle-button .icon-chat { display: block; }
+    #chat-toggle-button .icon-close { display: none; }
+    #chat-toggle-button.open { background-color: var(--danger-color); transform: rotate(180deg); }
+    #chat-toggle-button.open .icon-chat { display: none; }
+    #chat-toggle-button.open .icon-close { display: block; }
+
+    /* [MODIFICADO] Posição FECHADA do Chat (no canto) */
+    #chat-widget-container {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      top: auto; 
+      left: auto;
+      transform: scale(0); 
+      transform-origin: bottom right; 
+      width: 350px;
+      max-width: 90vw;
+      background: var(--card-background-color);
+      border-radius: 1.25rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(85vh - 100px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* [MODIFICADO] Posição ABERTA (Centralizada) */
+    #chat-widget-container.open {
+      top: 50%;
+      left: 50%;
+      bottom: auto;
+      right: auto;
+      transform: translate(-50%, -50%) scale(1); /* Centraliza */
+      transform-origin: center center;
+      opacity: 1;
+      max-height: 85vh; 
+    }
+
+    .chat-header { background-image: linear-gradient(45deg, var(--gradient-start) 0%, var(--gradient-end) 100%); color: white; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .chat-header-content { display: flex; align-items: center; gap: 10px; }
+    .chat-logo { height: 40px; width: 40px; border-radius: 50%; object-fit: cover; background-color: white; border: 1px solid var(--border-color); }
+    .chat-header-content div { line-height: 1.2; }
+    .chat-header-content h5 { margin: 0; font-size: 1.1rem; font-weight: 700; color: white; }
+    .chat-header-content small { font-size: 0.8rem; color: white; opacity: 0.85; }
+    .chat-header #chat-close-button { background: none; border: none; color: white; font-size: 1.5rem; line-height: 1; opacity: 0.8; padding: 0; cursor: pointer; }
+    .chat-header #chat-close-button:hover { opacity: 1; }
+    .chat-messages { min-height: 200px; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; flex-grow: 1; }
+    .chat-message { padding: 0.65rem 1rem; border-radius: 1.25rem; max-width: 85%; line-height: 1.4; animation: slideUpFadeIn 0.3s ease; word-wrap: break-word; }
+    .chat-message.bot { background-color: var(--input-background-color); color: var(--text-color); border-bottom-left-radius: 0.25rem; align-self: flex-start; }
+    .chat-message.user { background: var(--gradient-end); color: white; border-bottom-right-radius: 0.25rem; align-self: flex-end; text-align: right; }
+    .chat-message a { color: #3498db; text-decoration: underline; }
+    .chat-message.user a { color: #f1c40f; }
+    /* Adiciona estilo para <strong> dentro do chat */
+    .chat-message.bot strong { color: var(--primary-color); }
+    .chat-message.user strong { color: white; } /* Embora o user não deva usar strong, por via das dúvidas */
+    
+    .chat-input-area { display: flex; padding: 0.75rem 1rem; border-top: 1px solid var(--border-color); background: var(--card-background-color); flex-shrink: 0; }
+    #chat-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 15px; font-size: 0.9rem; outline: none; }
+    #chat-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(10, 34, 57, 0.1); }
+    #chat-send-button { background: var(--primary-color); border: none; border-radius: 50%; width: 38px; height: 38px; color: white; margin-left: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.2s; }
+    #chat-send-button:hover { background: var(--gradient-end); }
+    #chat-send-button svg { width: 18px; height: 18px; }
+    .chat-options { padding: 1rem; padding-top: 1.75rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem; position: relative; flex-shrink: 0; }
+    .chat-options::before { content: "Ou escolha um tópico"; position: absolute; top: 0.5rem; left: 50%; transform: translateX(-50%); color: var(--muted-text-color); font-size: 0.8rem; font-weight: 500; }
+    .chat-options button { background-color: var(--card-background-color); border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: 0.75rem; padding: 0.65rem 1rem; cursor: pointer; font-weight: 500; text-align: center; transition: all 0.2s ease; }
+    .chat-options button:hover { background-color: var(--primary-color); color: white; }
+    .chat-options button.btn-secondary-chat { background-color: transparent; border-color: var(--muted-text-color); color: var(--muted-text-color); font-weight: 400; margin-top: 0.5rem; }
+    .chat-options button.btn-secondary-chat:hover { background-color: var(--muted-text-color); color: white; }
+
+    /* Classe para aumentar a fonte do chat */
+    #chat-widget-container.chat-large-font { font-size: 1.1em; }
+    #chat-widget-container.chat-large-font .chat-message { padding: 0.8rem 1.2rem; }
+    #chat-widget-container.chat-large-font #chat-input { padding: 10px 18px; }
+    #chat-widget-container.chat-large-font .chat-options button { padding: 0.8rem 1.2rem; }
+    /* --- FIM: ESTILOS DO CHATBOT --- */
+  </style>
+</head>
+<body>
+
+  <div id="splash-screen"> <img src="https://i.imgur.com/4yt8FSx.png" alt="Logo Harmonicanto" class="splash-logo-img"> <h1 class="splash-title">Harmonicanto</h1> <p class="splash-subtitle" id="splash-subtitle"></p> </div>
+  <div id="main-content"> <div class="container"> <div class="card-container"> <div id="card-flipper" class="card-flipper"> <div class="card card-front"> <div class="card-body p-4 p-md-5"> <div id="form-container"> <div class="text-center mb-4"> <div class="logo-container"> <img src="https://i.imgur.com/4yt8FSx.png" alt="Logo Harmonicanto" class="logo-img"> </div> <h3 class="card-title">Junte-se a Nós</h3> <p id="greeting" class="greeting"></p> </div> <div class="progress-container"> <div class="progress"><div id="progress-bar" class="progress-bar" role="progressbar"></div></div> <div id="progress-bar-label" class="progress-bar-label"></div> </div> <form id="cadastroForm" novalidate> <div class="form-step active" data-step="1"> <h5 class="mb-3 fw-bold">1. Informações Pessoais</h5> <div class="mb-3"> <label for="nome" class="form-label">Nome Completo *</label> <input id="nome" name="nome" type="text" class="form-control" required> </div> <div class="mb-3"> <label for="email" class="form-label">E-mail *</label> <input id="email" name="email" type="email" class="form-control" placeholder="seunome@email.com" required> </div> <div class="mb-3"> <label for="telefone" class="form-label">Telefone / WhatsApp</label> <input id="telefone" name="telefone" type="tel" class="form-control" placeholder="(00) 90000-0000" maxlength="15"> </div> <div class="d-flex justify-content-end mt-4"> <button type="button" class="btn btn-primary next-btn">Avançar</button> </div> </div> <div class="form-step" data-step="2"> <h5 class="mb-3 fw-bold">2. Tipo de Cadastro</h5> <p>Como você gostaria de contribuir? *</p> <div class="form-check mb-2"> <input class="form-check-input" type="radio" name="tipo_cadastro" id="radioVoluntario" value="Voluntário" required> <label class="form-check-label" for="radioVoluntario">Quero ser Voluntário(a)</label> </div> <div class="form-check mb-3"> <input class="form-check-input" type="radio" name="tipo_cadastro" id="radioDoador" value="Doador" required> <label class="form-check-label" for="radioDoador">Quero ser Doador(a)</label> </div> <div id="volunteer-options" class="mt-4 conditional-options"> <h6 class="fw-bold">Detalhes de Voluntariado</h6> <div class="mb-3"> <label class="form-label">Quais suas habilidades?</label> <div class="form-check"> <input class="form-check-input" type="checkbox" name="habilidades" value="Música" id="checkMusica"> <label class="form-check-label" for="checkMusica">Música (Tocar/Cantar)</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="habilidades" value="Ensino" id="checkEnsino"> <label class="form-check-label" for="checkEnsino">Ensino / Pedagogia</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="habilidades" value="Eventos" id="checkEventos"> <label class="form-check-label" for="checkEventos">Organização de Eventos</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="habilidades" value="Admin" id="checkAdmin"> <label class="form-check-label" for="checkAdmin">Administrativo</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="habilidades" value="Outro" id="checkHabilidadeOutro"> <label class="form-check-label" for="checkHabilidadeOutro">Outro</label> </div> </div> <div class="mb-3"> <label for="disponibilidade" class="form-label">Sua disponibilidade (geral):</label> <select id="disponibilidade" name="disponibilidade" class="form-select"> <option value="">Selecione...</option> <option>Dias de semana (manhã)</option> <option>Dias de semana (tarde)</option> <option>Noites</option> <option>Fins de semana</option> <option>Flexível</option> </select> </div> </div> <div id="donor-options" class="mt-4 conditional-options"> <h6 class="fw-bold">Detalhes de Doação</h6> <label class="form-label">Tenho interesse em doar:</label> <div class="form-check"> <input class="form-check-input" type="checkbox" name="interesse_doacao" value="Financeiro" id="checkDinheiro"> <label class="form-check-label" for="checkDinheiro">Recurso Financeiro (PIX, etc.)</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="interesse_doacao" value="Instrumentos" id="checkInstrumentos"> <label class="form-check-label" for="checkInstrumentos">Instrumentos Musicais</label> </div> <div class="form-check"> <input class="form-check-input" type="checkbox" name="interesse_doacao" value="Material" id="checkMaterial"> <label class="form-check-label" for="checkMaterial">Material de Escritório / Outros</label> </div> <hr class="my-4"> <div class="text-center px-2"> <h6 class="fw-bold" style="color: var(--primary-color);">Faça uma doação e entre para a história da Harmonicanto</h6> <p class="mb-3" style="font-size: 0.95rem;">Você também pode fazer um pagamento...</p> <img src="https://www.harmonicanto.org.br/wp-content/uploads/2024/01/harmonicanto-qrcode-pix-300x300.png" alt="QR Code PIX Harmonicanto" class="img-fluid mb-3" style="max-width: 180px; border-radius: 8px; border: 1px solid var(--border-color);"> <p class="mb-3"><strong class="text-dark">Chave PIX (CNPJ):</strong><br><span class="fs-6" style="color: var(--text-color); font-weight: 500;">14607104000173</span></p> <p class="small text-muted mb-0 lh-base"><strong class="text-dark">Conta Bancária:</strong><br>Banco Bradesco, agência 0473, conta corrente 0724078-4<br>Associação Harmonicanto Música Cidadania<br>CNPJ: 14607104000173</p> </div> </div> <div class="d-flex justify-content-between mt-4"> <button type="button" class="btn btn-secondary prev-btn">Voltar</button> <button type="button" class="btn btn-primary next-btn">Avançar</button> </div> </div> <div class="form-step" data-step="3"> <h5 class="mb-3 fw-bold">3. Mensagem Final</h5> <div class="mb-3"> <label for="mensagem" class="form-label">Deixe uma mensagem (opcional)</label> <textarea id="mensagem" name="mensagem" rows="4" class="form-control" maxlength="1000" placeholder="Por que você quer se juntar a nós? Alguma dúvida?"></textarea> </div> <div class="form-check mb-3"> <input class="form-check-input" type="checkbox" value="Sim" id="consentimento" name="consentimento" required> <label class="form-check-label" for="consentimento">Autorizo a Harmonicanto a entrar em contato comigo por e-mail ou WhatsApp. *</label> </div> <div class="d-grid gap-2 mt-4 pt-2"> <button type="submit" id="submitButton" class="btn btn-primary btn-lg"> <span id="buttonText">Enviar Cadastro</span> <span id="buttonSpinner" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span> </button> <button type="button" class="btn btn-outline-secondary prev-btn">Voltar</button> </div> </div> </form> </div> <div id="status" class="mt-3 text-center"></div> </div> </div> <div class="card card-back"> <div id="success-message" class="card-body p-4 p-md-5 d-flex flex-column justify-content-center text-center"> <div class="icon-success">✓</div> <h4>Cadastro Recebido!</h4> <p class="text-muted fs-5">Obrigado por se juntar à Harmonicanto!</p> <p class="mb-4">Enviamos um e-mail de confirmação para você (verifique sua caixa de spam). Entraremos em contato em breve.</p> <button id="newReportBtn" class="btn btn-primary w-100 mt-auto">Voltar ao Início</button> </div> </div> </div> </div> </div> </div>
+
+  <button id="chat-toggle-button"> <svg class="icon-chat" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path> </svg> <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="18" y1="6" x2="6" y2="18"></line> <line x1="6" y1="6" x2="18" y2="18"></line> </svg> </button>
+  <div id="chat-widget-container"> <div class="chat-header"> <div class="chat-header-content"> <img src="https://i.imgur.com/4yt8FSx.png" alt="Logo" class="chat-logo"> <div> <h5>Harmonicanto</h5> <small>Atendente Virtual</small> </div> </div> <button id="chat-close-button">&times;</button> </div> <div class="chat-messages" id="chat-messages"> </div> <form id="chat-input-form" class="chat-input-area"> <input type="text" id="chat-input" placeholder="Digite sua pergunta..." autocomplete="off"> <button type="submit" id="chat-send-button" aria-label="Enviar"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <line x1="22" y1="2" x2="11" y2="13"></line> <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon> </svg> </button> </form> <div class="chat-options" id="chat-options"> </div> </div>
+
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsgirGbqzVDBogdFKpmY-Wrr7qXrVsD_k4_CHimsImQFIsta2TjXToxU9Q7SjdB8EfGQ/exec'; 
+
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Pega o elemento de áudio
+      const openingSound = document.getElementById("opening-sound");
+
+      // --- LÓGICA DO FORMULÁRIO (MINIFICADA) ---
+      const splashScreen=document.getElementById("splash-screen"),mainContent=document.getElementById("main-content"),subtitle=document.getElementById("splash-subtitle"),greetingEl=document.getElementById("greeting");subtitle.textContent="Música & Cidadania";
+      
+      // Adicionado o play do som
+      setTimeout(()=>{
+          splashScreen.classList.add("hidden");
+          mainContent.classList.add("visible");
+          
+          if (openingSound) {
+              openingSound.volume = 0.3; 
+              openingSound.play().catch(error => {
+                  console.warn("Autoplay do som foi bloqueado pelo navegador:", error);
+              });
+          }
+      },3500);
+      
+      const hour=(new Date).getHours(),bomDiaMessages=["Bom dia! Vamos fazer música e mudar o dia de alguém?","Bom dia! Pronto para fazer a diferença hoje?"],boaTardeMessages=["Boa tarde! Que tal usar sua voz ou seu tempo para o bem?","Boa tarde! Como podemos ajudar a comunidade?"],boaNoiteMessages=["Boa noite! Agradecemos seu interesse em nossa causa.","Boa noite! Obrigado por ajudar a cuidar da Harmonicanto."];let messages=hour>=5&&hour<12?bomDiaMessages:hour>=12&&hour<18?boaTardeMessages:boaNoiteMessages;greetingEl.textContent=messages[Math.floor(Math.random()*messages.length)];let currentStep=1;const form=document.getElementById("cadastroForm"),cardFlipper=document.getElementById("card-flipper"),progressBar=document.getElementById("progress-bar"),progressBarLabel=document.getElementById("progress-bar-label"),steps=document.querySelectorAll(".form-step"),totalSteps=steps.length,showStep=e=>{steps.forEach(e=>e.classList.remove("active")),document.querySelector(`.form-step[data-step="${e}"]`).classList.add("active"),updateProgressBar(e)},updateProgressBar=e=>{const t=e/totalSteps*100;progressBar.style.width=`${t}%`,progressBarLabel.textContent=`Etapa ${e} de ${totalSteps}`},validateStep=e=>{let t=!0;const s=document.querySelector(`.form-step[data-step="${e}"]`),o=s.querySelectorAll("[required]");return o.forEach(e=>{const o="radio"===e.type||"checkbox"===e.type?e.closest(".form-check"):e;o.classList.remove("is-invalid-shake");let a=!0;if("radio"===e.type){const t=s.querySelectorAll(`input[name="${e.name}"]`);a=Array.from(t).some(e=>e.checked)}else a="checkbox"===e.type?e.checked:e.value.trim()!=="";a||(t=!1,("radio"===e.type||"checkbox"===e.type?e.closest(".form-check"):e).classList.add("is-invalid-shake"),setTimeout(()=>o.classList.remove("is-invalid-shake"),500))}),t||document.querySelector(".alert")||showError("Por favor, preencha os campos obrigatórios (*)."),t};document.querySelectorAll(".next-btn").forEach(e=>{e.addEventListener("click",()=>{validateStep(currentStep)&&(currentStep++,showStep(currentStep))})}),document.querySelectorAll(".prev-btn").forEach(e=>{e.addEventListener("click",()=>{currentStep--,showStep(currentStep)})});const phoneInput=document.getElementById("telefone");phoneInput.addEventListener("input",e=>{let t=e.target.value.replace(/\D/g,"").slice(0,11);t=t.replace(/^(\d{2})(\d)/g,"($1) $2"),t=t.replace(/(\d{5})(\d)/,"$1-$2"),e.target.value=t});const volunteerOptions=document.getElementById("volunteer-options"),donorOptions=document.getElementById("donor-options");document.querySelectorAll('input[name="tipo_cadastro"]').forEach(e=>{e.addEventListener("change",e=>{const t=e.target;donorOptions.style.display="Voluntário"===t.value?"none":"block",volunteerOptions.style.display="Voluntário"===t.value?"block":"none"})}),form.addEventListener("submit",function(e){e.preventDefault(),validateStep(currentStep)&&(setLoading(!0),sendData(function(){let e=new FormData(form),t=Object.fromEntries(e.entries());return t.protocolo=`HMC-${Date.now()}`,t.habilidades=Array.from(document.querySelectorAll('input[name="habilidades"]:checked')).map(e=>e.value).join(", "),t.interesse_doacao=Array.from(document.querySelectorAll('input[name="interesse_doacao"]:checked')).map(e=>e.value).join(", "),t}()))}),document.getElementById("newReportBtn").addEventListener("click",()=>{cardFlipper.classList.remove("is-flipped"),setTimeout(()=>{form.reset(),volunteerOptions.style.display="none",donorOptions.style.display="none",document.getElementById("status").innerHTML="",currentStep=1,showStep(currentStep)},600)});const statusDiv=document.getElementById("status"),showError=e=>{setLoading(!1),statusDiv.innerHTML=`<div class="alert alert-danger alert-dismissible fade show" role="alert">${e}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`},setLoading=e=>{const t=document.getElementById("submitButton");t.disabled=e,t.querySelector("#buttonText").style.display=e?"none":"inline",t.querySelector("#buttonSpinner").style.display=e?"inline-block":"none"};updateProgressBar(currentStep);
+      // --- FIM LÓGICA DO FORMULÁRIO ---
+
+      // --- INÍCIO: FUNÇÃO GLOBAL SENDDATA (USADA PELO FORM E CHAT) ---
+      const sendData = (data) => {
+        const cameFromChat = chatState && chatState.currentStep === 'submitting';
+        if (cameFromChat) {
+            addMessage('bot', 'Enviando seus dados...');
+            chatOptions.innerHTML = ''; 
+            chatInputForm.style.display = 'none'; 
+        } else {
+             setLoading(true); 
+        }
+
+        fetch(SCRIPT_URL, { 
+          method: 'POST', 
+          mode: 'cors', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+          body: JSON.stringify(data) 
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.status === 'success') {
+            if (cameFromChat) {
+                addMessage('bot', 'Cadastro realizado com sucesso! 🎉 Enviamos um e-mail de confirmação para você. Em breve entraremos em contato.');
+                resetChatState(); 
+                showMainOptions(); 
+            } else {
+                cardFlipper.classList.add('is-flipped'); 
+            }
+          } else { 
+            throw new Error(result.message || 'Ocorreu um erro desconhecido ao enviar.'); 
+          }
+        })
+        .catch(error => { 
+            const errorMsg = `<strong>Erro ao enviar:</strong> ${error.message}`;
+            if (cameFromChat) {
+                addMessage('bot', `Houve um problema ao enviar seu cadastro: ${error.message} Por favor, tente novamente ou use o formulário principal.`);
+                resetChatState(); 
+                showMainOptions(); 
+            } else {
+                showError(errorMsg); 
+            }
+        })
+        .finally(() => {
+            if (cameFromChat) {
+                 chatInputForm.style.display = 'flex'; 
+            } else {
+                 setLoading(false); 
+            }
+        });
+      };
+      // --- FIM: FUNÇÃO GLOBAL SENDDATA ---
+
+
+      //
+      // --- INÍCIO: LÓGICA DO CHATBOT COM CADASTRO ---
+      //
+      const chatToggleButton = document.getElementById('chat-toggle-button');
+      const chatWidget = document.getElementById('chat-widget-container');
+      const chatCloseButton = document.getElementById('chat-close-button');
+      const chatMessages = document.getElementById('chat-messages');
+      const chatOptions = document.getElementById('chat-options');
+      const chatInputForm = document.getElementById('chat-input-form');
+      const chatInput = document.getElementById('chat-input');
+      let isFontLarge = false; 
+      let chatState = null; // null = modo normal; objeto = modo cadastro
+
+      const resetChatState = () => {
+        chatState = null;
+         chatInput.placeholder = "Digite sua pergunta..."; 
+         chatInputForm.style.display = 'flex'; 
+      };
+
+      // [MODIFICADO] Adicionado document.body.classList.toggle
+      const toggleChat = () => {
+        const isOpen = chatWidget.classList.toggle('open');
+        chatToggleButton.classList.toggle('open');
+        
+        // Adiciona/remove a classe 'chat-is-open' do body
+        document.body.classList.toggle('chat-is-open', isOpen);
+        
+        if (!isOpen && chatState && chatState.currentStep !== 'submitting') { 
+            addMessage('bot', "Cadastro cancelado ao fechar o chat."); 
+            resetChatState(); 
+        }
+        if (isOpen && chatMessages.children.length === 0) {
+            showWelcomeMessage();
+        }
+        if (!isOpen && isFontLarge) {
+            // toggleFontSize(true); 
+        }
+      };
+
+      chatToggleButton.addEventListener('click', toggleChat);
+      chatCloseButton.addEventListener('click', toggleChat);
+
+      const addMessage = (sender, message) => {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message', sender);
+        messageElement.innerHTML = message; 
+        chatMessages.appendChild(messageElement);
+        setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50); 
+      };
+
+      const showOptions = (options, addCancel = false) => {
+        chatOptions.innerHTML = ''; 
+        options.forEach(option => {
+          const button = document.createElement('button');
+          button.textContent = option.text;
+          button.dataset.optionId = option.id; 
+          if(option.value) button.dataset.optionValue = option.value;
+          button.addEventListener('click', handleOptionClick);
+          chatOptions.appendChild(button);
+        });
+        if (addCancel && chatState) {
+             const cancelButton = document.createElement('button');
+             cancelButton.textContent = "Voltar ao Menu Principal"; 
+             cancelButton.dataset.optionId = 'cancel_registration';
+             cancelButton.classList.add('btn-secondary-chat'); 
+             cancelButton.addEventListener('click', handleOptionClick);
+             chatOptions.appendChild(cancelButton);
+        }
+         setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50); 
+      };
+      
+      // [MODIFICADO] Opções principais atualizadas
+      const mainOptions = [
+          { text: "Cadastrar pelo chat", id: "start_registration"}, 
+          { text: "Quero Doar", id: "duvida_doacao"}, 
+          { text: "Sobre (Missão, Visão, etc.)", id: "sobre" },
+          { text: "Nosso Trabalho (Atividades)", id: "atividades" },
+          { text: "Visitar site", id: "site_antigo" },
+          { text: "Acessibilidade", id: "acessibilidade" } 
+      ];
+      const getAccessibilityOptions = () => [
+          { text: (isFontLarge ? "Diminuir letras" : "Aumentar letras"), id: "toggle_fonte" },
+          { text: "Voltar", id: "inicio" }
+      ];
+      const tipoCadastroOptions = [
+          { text: "Voluntário(a)", id: "select_tipo", value: "Voluntário" },
+          { text: "Doador(a)", id: "select_tipo", value: "Doador" }
+      ];
+      const disponibilidadeOptions = [
+          { text: "Manhã (Semana)", id: "select_disponibilidade", value: "Dias de semana (manhã)" },
+          { text: "Tarde (Semana)", id: "select_disponibilidade", value: "Dias de semana (tarde)" },
+          { text: "Noites", id: "select_disponibilidade", value: "Noites" },
+          { text: "Fins de Semana", id: "select_disponibilidade", value: "Fins de semana" },
+          { text: "Flexível", id: "select_disponibilidade", value: "Flexível" }
+      ];
+       const consentimentoOptions = [
+          { text: "Sim, autorizo", id: "select_consentimento", value: "Sim" },
+          { text: "Não autorizo", id: "select_consentimento", value: "Não" }
+      ];
+
+      const showMainOptions = () => showOptions(mainOptions);
+      const showAccessibilityOptions = () => showOptions(getAccessibilityOptions());
+      
+      const showWelcomeMessage = () => {
+         chatMessages.innerHTML = ''; 
+         addMessage('bot', 'Olá! 👋 Sou o assistente virtual da Harmonicanto. Como posso te ajudar?');
+         showMainOptions();
+      };
+
+      const toggleFontSize = (forceOff = false) => { 
+          if (forceOff) { isFontLarge = false; } else { isFontLarge = !isFontLarge; }
+          chatWidget.classList.toggle('chat-large-font', isFontLarge); 
+          if (!forceOff) {
+              addMessage('bot', `Tamanho da fonte ${isFontLarge ? 'aumentado' : 'restaurado ao normal'}.`);
+              showAccessibilityOptions(); 
+          }
+      };
+      
+       // --- INÍCIO: Lógica de Cadastro via Chat ---
+       // (Esta seção não foi alterada)
+      const startChatRegistration = () => {
+          chatState = { 
+              currentStep: 'askName', 
+              formData: {} 
+          };
+          addMessage('bot', "Ok! Vamos fazer seu cadastro passo a passo. Se quiser parar, use o botão 'Voltar ao Menu Principal'.");
+          askNextRegistrationQuestion();
+      };
+
+      const askNextRegistrationQuestion = () => {
+          if (!chatState) return; 
+
+          const step = chatState.currentStep;
+          let question = "";
+          let showInput = true;
+          let optionsToShow = null;
+          let placeholder = "Digite aqui..."; 
+
+          switch(step) {
+              case 'askName':
+                  question = "Qual seu nome completo? *";
+                  placeholder = "Seu nome completo...";
+                  break;
+              case 'askEmail':
+                  question = "Qual seu melhor e-mail? *";
+                  placeholder = "exemplo@email.com";
+                  break;
+              case 'askTelefone':
+                  question = "Qual seu Telefone/WhatsApp? (Opcional, digite 'pular' se não quiser informar)";
+                  placeholder = "(XX) 9XXXX-XXXX ou pular";
+                  break;
+               case 'askTipo':
+                  question = "Você quer se cadastrar como Voluntário(a) ou Doador(a)? *";
+                  showInput = false; 
+                  optionsToShow = tipoCadastroOptions;
+                  break;
+               case 'askHabilidades':
+                   question = "Legal ser voluntário! Quais suas habilidades principais? (Ex: Toco violão, Sei dar aulas, Organizo eventos...)";
+                   placeholder = "Suas habilidades...";
+                   break;
+               case 'askDisponibilidade':
+                   question = "Qual sua disponibilidade geral para voluntariar?";
+                   showInput = false;
+                   optionsToShow = disponibilidadeOptions;
+                   break;
+                case 'askInteresseDoacao':
+                    question = "Que ótimo que quer doar! Em quais tipos de doação você tem interesse? (Ex: Dinheiro/PIX, Instrumentos, Material de escritório)";
+                    placeholder = "Tipos de doação...";
+                    break;
+                case 'askMensagem':
+                    question = "Gostaria de deixar alguma mensagem ou dúvida? (Opcional - digite 'não' ou 'pular' se não quiser)";
+                    placeholder = "Sua mensagem ou pular...";
+                    break;
+                 case 'askConsentimento':
+                    question = "Para finalizar: você autoriza a Harmonicanto a entrar em contato por e-mail ou WhatsApp? *";
+                    showInput = false;
+                    optionsToShow = consentimentoOptions;
+                    break;
+                 case 'submitting': 
+                     question = ""; 
+                     showInput = false;
+                     optionsToShow = []; 
+                     submitChatRegistration();
+                     break;
+                 default:
+                     console.error("Estado de cadastro desconhecido:", step);
+                     addMessage('bot', "Ocorreu um erro interno no cadastro. Tente novamente mais tarde ou use o formulário principal.");
+                     resetChatState();
+                     showMainOptions();
+                     return; 
+          }
+
+          if (question) addMessage('bot', question);
+          chatInputForm.style.display = showInput ? 'flex' : 'none'; 
+          chatInput.placeholder = placeholder;
+          
+          showOptions(optionsToShow || [], true); 
+
+           if (showInput) {
+               setTimeout(() => chatInput.focus(), 100); 
+           }
+      };
+
+        const submitChatRegistration = () => {
+            if (!chatState || chatState.currentStep !== 'submitting') return;
+            const data = chatState.formData;
+
+            if (data.consentimento !== 'Sim') {
+                addMessage('bot', "Entendido. Sem sua autorização, não podemos prosseguir com o cadastro. Se mudar de ideia, pode começar novamente ou usar o formulário principal.");
+                resetChatState();
+                showMainOptions();
+                return;
+            }
+
+            data.protocolo = `HMC-CHAT-${Date.now()}`;
+            data.habilidades = data.habilidades || '';
+            data.disponibilidade = data.disponibilidade || '';
+            data.interesse_doacao = data.interesse_doacao || '';
+            data.mensagem = data.mensagem || '';
+            
+            sendData(data); 
+        };
+
+      // --- FIM: Lógica de Cadastro via Chat ---
+
+      // [MODIFICADO] Lida com o clique nos BOTÕES de opção
+      const handleOptionClick = (e) => {
+        const button = e.target;
+        const optionId = button.dataset.optionId;
+        const optionText = button.textContent;
+        const optionValue = button.dataset.optionValue; 
+
+        // Se estiver em modo cadastro
+        if (chatState) {
+            const currentStep = chatState.currentStep;
+
+            if (optionId === 'cancel_registration') {
+                addMessage('bot', "Cadastro cancelado. Voltando ao menu principal.");
+                resetChatState();
+                showMainOptions();
+                return;
+            }
+
+            if ((currentStep === 'askTipo' && optionId === 'select_tipo') ||
+                (currentStep === 'askDisponibilidade' && optionId === 'select_disponibilidade') ||
+                (currentStep === 'askConsentimento' && optionId === 'select_consentimento')) 
+            {
+                addMessage('user', optionText); 
+                
+                 if (currentStep === 'askTipo') chatState.formData.tipo_cadastro = optionValue;
+                 if (currentStep === 'askDisponibilidade') chatState.formData.disponibilidade = optionValue;
+                 if (currentStep === 'askConsentimento') chatState.formData.consentimento = optionValue;
+
+                 if (currentStep === 'askTipo') {
+                     chatState.currentStep = (optionValue === 'Voluntário' ? 'askHabilidades' : 'askInteresseDoacao');
+                 } else if (currentStep === 'askDisponibilidade') {
+                     chatState.currentStep = 'askMensagem';
+                 } else if (currentStep === 'askConsentimento') {
+                      chatState.currentStep = 'submitting'; 
+                 }
+                 askNextRegistrationQuestion();
+
+            } else {
+                 if (optionId === 'inicio' || optionId === 'acessibilidade' || optionId === 'toggle_fonte') {
+                     processBotResponse(optionId); 
+                 } else {
+                     addMessage('bot',"Use o campo de texto (se disponível) ou os botões específicos para esta etapa do cadastro, ou clique em 'Voltar ao Menu Principal'.");
+                 }
+            }
+        } 
+        // Modo normal (não cadastro)
+        else {
+             if (optionId === "start_registration") {
+                 startChatRegistration(); 
+             
+             // [MODIFICADO] Esta lista de IDs não deve gerar uma msg de usuário
+             } else if (!["inicio", "acessibilidade", "toggle_fonte"].includes(optionId)) {
+                 addMessage('user', optionText); // IDs como 'sobre', 'missao', 'atividades' vão gerar msg de user
+                 processBotResponse(optionId);
+             } else {
+                  // Processa 'inicio', 'acessibilidade', 'toggle_fonte' sem msg user
+                  processBotResponse(optionId); 
+             }
+        }
+      };
+
+      // Lida com o ENVIO DE TEXTO do usuário
+      chatInputForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const messageText = chatInput.value.trim();
+        if (!messageText) return;
+        
+        addMessage('user', messageText);
+        chatInput.value = ''; 
+
+        // Se estiver em modo cadastro
+        if (chatState) {
+            // ... (NENHUMA MUDANÇA NESTE BLOCO 'IF') ...
+            const step = chatState.currentStep;
+            let nextStep = null;
+            let isValidInput = true; 
+
+             switch(step) {
+                 case 'askName':
+                     if (messageText.length < 3) { 
+                         addMessage('bot', "Por favor, digite seu nome completo.");
+                         isValidInput = false;
+                     } else {
+                         chatState.formData.nome = messageText;
+                         nextStep = 'askEmail';
+                     }
+                     break;
+                 case 'askEmail':
+                     if (!messageText.includes('@') || !messageText.includes('.')) {
+                         addMessage('bot', "E-mail inválido. Verifique e digite novamente.");
+                         isValidInput = false;
+                     } else {
+                         chatState.formData.email = messageText;
+                         nextStep = 'askTelefone';
+                     }
+                     break;
+                 case 'askTelefone':
+                     const cleanedPhone = messageText.replace(/\D/g,'');
+                     if (messageText.toLowerCase() === 'pular') {
+                         chatState.formData.telefone = '';
+                     } else if (cleanedPhone.length < 10) { 
+                          addMessage('bot', "Telefone inválido. Inclua o DDD. Se não quiser informar, digite 'pular'.");
+                          isValidInput = false;
+                     } else {
+                        chatState.formData.telefone = cleanedPhone; 
+                     }
+                     if(isValidInput) nextStep = 'askTipo';
+                     break;
+                 case 'askHabilidades': 
+                     chatState.formData.habilidades = messageText;
+                     nextStep = 'askDisponibilidade';
+                     break;
+                 case 'askInteresseDoacao': 
+                     chatState.formData.interesse_doacao = messageText;
+                     nextStep = 'askMensagem'; 
+                     break;
+                 case 'askMensagem':
+                     chatState.formData.mensagem = (messageText.toLowerCase() === 'não' || messageText.toLowerCase() === 'nao' || messageText.toLowerCase() === 'pular') ? '' : messageText;
+                     nextStep = 'askConsentimento';
+                     break;
+                 default:
+                      addMessage('bot', "Por favor, use os botões para escolher uma opção ou clique em 'Voltar ao Menu Principal'.");
+                      isValidInput = false; 
+                      break; 
+             }
+
+             if (isValidInput && nextStep) {
+                 chatState.currentStep = nextStep;
+                 askNextRegistrationQuestion();
+             } else if (isValidInput && !nextStep) {
+                  console.error("Validação passou, mas nextStep é nulo para:", step);
+             } else {
+                 chatInput.placeholder = `Inválido. ${chatInput.placeholder}`; 
+             }
+        } 
+        // Modo normal
+        else {
+            // [MODIFICADO] Chama a nova processUserMessage
+            processUserMessage(messageText);
+        }
+      });
+      
+      // [MODIFICADO] Processa o TEXTO digitado pelo usuário (MODO NORMAL)
+      const processUserMessage = (text) => {
+        const lowerText = text.toLowerCase();
+        let responseId = 'fallback'; 
+        
+        // Palavras-chave de Cadastro/Doação
+        if (lowerText.includes('cadastrar') || lowerText.includes('inscrever')) { responseId = 'info_cadastrar'; } 
+        else if (lowerText.includes('doar') || lowerText.includes('pix')) { responseId = 'duvida_doacao'; } 
+        else if (lowerText.includes('voluntario') || lowerText.includes('ajudar')) { responseId = 'duvida_voluntario'; } 
+        
+        // Palavras-chave sobre a Organização
+        else if (lowerText.includes('sobre') || lowerText.includes('o que é')) { responseId = 'sobre'; } 
+        else if (lowerText.includes('missão') || lowerText.includes('missao') || lowerText.includes('propósito')) { responseId = 'missao'; }
+        else if (lowerText.includes('visão') || lowerText.includes('visao') || lowerText.includes('futuro')) { responseId = 'visao'; }
+        else if (lowerText.includes('programas') || lowerText.includes('projetos') || lowerText.includes('harmonia carioca') || lowerText.includes('coral')) { responseId = 'programas'; }
+        else if (lowerText.includes('impacto') || lowerText.includes('números') || lowerText.includes('numeros') || lowerText.includes('beneficiadas')) { responseId = 'impacto'; }
+        else if (lowerText.includes('trabalho') || lowerText.includes('atividades') || lowerText.includes('o que fazem')) { responseId = 'atividades'; }
+        
+        // Palavras-chave de Utilidade
+        else if (lowerText.includes('site antigo') || lowerText.includes('site')) { responseId = 'site_antigo'; } 
+        else if (lowerText.includes('oi') || lowerText.includes('ola')) { responseId = 'saudacao'; } 
+        else if (lowerText.includes('fonte') || lowerText.includes('letra') || lowerText.includes('tamanho') || lowerText.includes('aumentar') || lowerText.includes('diminuir') || lowerText.includes('acessibilidade')) { responseId = 'acessibilidade'; }
+        
+        processBotResponse(responseId);
+      };
+
+      // [MODIFICADO] Gera a RESPOSTA DO BOT (MODO NORMAL e transições)
+      const processBotResponse = (responseId) => {
+        if (responseId !== 'toggle_fonte') {
+            chatOptions.innerHTML = ''; 
+        }
+
+        setTimeout(() => {
+          let showOptionsAfter = true; 
+          let optionsToShow = null; 
+
+          switch (responseId) {
+            case "inicio": 
+              addMessage('bot', 'Em que mais posso ajudar?');
+              optionsToShow = mainOptions;
+              showOptionsAfter = false; 
+              break;
+              
+            // --- Respostas de Cadastro ---
+            case "info_cadastrar": 
+              addMessage('bot', 'Você pode se cadastrar usando o formulário principal aqui na página ou, se preferir, posso te guiar pelo cadastro aqui no chat. O que você prefere?');
+              optionsToShow = [ 
+                  { text: "Usar o formulário", id: "usar_form" },
+                  { text: "Cadastrar pelo chat", id: "start_registration" },
+                  { text: "Voltar", id: "inicio"}
+              ];
+              showOptionsAfter = false;
+              break;
+             case "usar_form":
+                 addMessage('bot', "Ok! É só rolar a página para cima e preencher o formulário. Se precisar de ajuda, estou aqui! 😊");
+                 break; 
+            case "duvida_voluntario": 
+                 addMessage('bot', 'Para ser voluntário, use o formulário principal desta página (selecione "Quero ser Voluntário(a)") ou escolha "Cadastrar pelo chat" aqui.'); 
+                 break;
+            case "duvida_doacao": 
+                 addMessage('bot', 'Para doar, use o formulário principal (escolha "Quero ser Doador(a)") ou escolha "Cadastrar pelo chat" aqui. As opções de PIX/conta aparecem no formulário.'); 
+                 break;
+
+            // --- [SEÇÃO ATUALIZADA] Respostas sobre a Harmonicanto ---
+            case "sobre": 
+              addMessage('bot', 'A Harmonicanto é uma associação que usa música e cidadania para transformação social. O que você gostaria de saber mais?');
+              optionsToShow = [
+                  { text: "Nossa Missão", id: "missao" },
+                  { text: "Nossa Visão", id: "visao" },
+                  { text: "Nossos Programas", id: "programas" },
+                  { text: "Nosso Impacto", id: "impacto" },
+                  { text: "Voltar", id: "inicio"}
+              ];
+              showOptionsAfter = false;
+              break;
+
+            case "atividades": 
+              addMessage('bot', 'Nosso trabalho se divide em 4 pilares principais: <br><strong>1. Educação Musical:</strong> Ensinamos canto e uma variedade de instrumentos. <br><strong>2. Desenvolvimento Pessoal:</strong> Oferecemos atividades pedagógicas para o bem-estar socioemocional. <br><strong>3. Reforço Escolar:</strong> Damos suporte educacional para o ensino básico. <br><strong>4. Apoio a Longo Prazo:</strong> Trabalhamos com a comunidade pelo futuro de crianças e adolescentes.');
+              break;
+              
+            case "missao":
+              addMessage('bot', '<strong>Nossa Missão:</strong> A Harmonicanto promove a educação musical de crianças e adolescentes em situação de vulnerabilidade na Comunidade de Cantagalo no Rio de Janeiro. Oferecemos apoio pedagógico e reforço escolar, além de uma ampla variedade de atividades educativas e relacionadas à cultura, à ecologia e ao bem estar sócio emocional.');
+              break;
+              
+            case "visao":
+              addMessage('bot', '<strong>Nossa Visão:</strong> É ser uma Organização Social forte e ativa, dedicada a causar um impacto positivo no aspecto social das comunidades que atendemos. Alcançamos isso ao incentivar a transformação e o crescimento pessoal de crianças e adolescentes.');
+              break;
+              
+            case "programas":
+              addMessage('bot', 'Temos dois projetos principais: <br>1. O <strong>Harmonia Carioca</strong> oferece oficinas de música (canto, flauta doce, percussão), artes, leitura, rodas de cidadania, jogos pedagógicos e reforço escolar. <br>2. O <strong>Coral Harmonicanto</strong> oferece aulas de canto, coral, flauta doce, percussão, teclado, teoria musical e canta um vasto repertório harmonizado em 4 vozes.');
+              break;
+              
+            case "impacto":
+              addMessage('bot', 'Nosso impacto é real! Ao longo dos anos, foram realizadas <strong>361 apresentações</strong> musicais na Cidade do Rio de Janeiro. <strong>1.687 crianças</strong> foram beneficiadas diretamente, impactando suas famílias e a Comunidade do Pavão-Pavãozinho-Cantagalo.');
+              break;
+
+            // --- Respostas de Utilidade ---
+            case "site_antigo": 
+                 addMessage('bot', 'Para visitar nosso site antigo: <a href="http://harmonicanto.org.br/" target="_blank" rel="noopener noreferrer">clique aqui</a>.'); 
+                 break;
+            case "saudacao": 
+                 addMessage('bot', 'Olá! Como posso te ajudar hoje? 😊'); 
+                 break;
+            case "acessibilidade":
+              addMessage('bot', 'Aqui estão as opções de acessibilidade:');
+              optionsToShow = getAccessibilityOptions();
+              showOptionsAfter = false; 
+              break;
+            case "toggle_fonte":
+              toggleFontSize(); 
+              showOptionsAfter = false; 
+              break;
+              
+            // --- Fallback ---
+            case "fallback":
+            default:
+              addMessage('bot', 'Desculpe, não entendi muito bem. 😕 Poderia reformular sua pergunta ou escolher um dos tópicos abaixo?');
+              break; 
+          }
+          
+          if (showOptionsAfter) { 
+              optionsToShow = mainOptions; 
+          }
+          
+          if (optionsToShow) {
+              showOptions(optionsToShow); 
+          }
+
+        }, 600); 
+      };
+
+      // --- FIM: LÓGICA DO CHATBOT ---
+
+    });
+</script>
+
+<audio id="opening-sound" src="https://actions.google.com/sounds/v1/communication/connect.ogg" preload="auto"></audio>
+
+</body>
+</html>
